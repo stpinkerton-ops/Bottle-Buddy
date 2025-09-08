@@ -134,12 +134,11 @@
             box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color) 20%, transparent);
         }
 
-        /* MODIFIED: Specific styling for a flat select dropdown */
         select {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            padding-right: 36px; /* Make space for the arrow */
+            padding-right: 36px;
             background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='var(--chevron-color)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
             background-repeat: no-repeat;
             background-position: right 10px center;
@@ -176,10 +175,12 @@
             filter: brightness(1.1);
         }
         
+        /* MODIFIED: Simplified action buttons layout */
         .action-buttons {
             display: flex;
             gap: 8px;
             margin-top: 10px;
+            justify-content: flex-end; /* Align buttons to the right */
         }
         
         .btn-small {
@@ -261,7 +262,7 @@
         <div class="header">
             <h1>Bottle Buddy 🍼</h1>
             <p>A simple tracker for your daily events.</p>
-        </div>
+        }
         <div class="content">
             <div class="form-section">
                 <div class="form-row">
@@ -396,6 +397,7 @@
             saveAndRender();
         }
 
+        // MODIFIED: This function now renders a single "Add to Calendar" button
         function renderTrackers() {
             const container = document.getElementById('trackersList');
             if (trackers.length === 0) {
@@ -411,8 +413,7 @@
                         `).join('')}
                     </div>
                     <div class="action-buttons">
-                        <button class="btn-small" onclick="exportToCalendar(${tracker.id})">Export</button>
-                        <button class="btn-small" onclick="generateSubscriptionLink(${tracker.id})">Subscribe</button>
+                        <button class="btn-small" onclick="exportToCalendar(${tracker.id})">Add to Calendar</button>
                         <button class="btn-small btn-danger" onclick="deleteTracker(${tracker.id})">Delete</button>
                     </div>
                 </div>`).join('');
@@ -430,14 +431,6 @@
             if (!tracker) return;
             const icsContent = generateICSFile(tracker);
             downloadFile(`${tracker.name}.ics`, icsContent);
-        }
-
-        function generateSubscriptionLink(trackerId) {
-            const tracker = trackers.find(t => t.id === trackerId);
-            if (!tracker) return;
-            const icsContent = generateICSFile(tracker);
-            const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent);
-            prompt("Copy this static subscription link for your calendar app:", dataUri);
         }
 
         function generateICSFile(tracker) {
@@ -528,7 +521,7 @@
             if (Notification.permission === 'granted') {
                 new Notification(tracker.name, {
                     body: `It's time for your ${reminder.time} reminder.`,
-                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJvdHRsZS13YXRlciI+PHBhdGggZD0iTTE1IDUgSDlBNCA0IDAgMCAwIDUgOXYxMGE0IDQgMCAwIDAgNCA0aDZBNCA0IDAgMCAwIDE5IDE5VjlhNCA0IDAgMCAwLTQtNHoiLz48cGF0aCBkPSJNOSAxMmExLjUuIDEuNSAwIDAgMCAzIDAgMS45IDEuNSAwIDAgMSAzIDAgMy4zMyAzLjMzIDAgMCAxLTMgMyAzLjMzIDMuMzMgMCAwIDEtMy0zWiIvPjxwYXRoIGQ9Ik0xMiA1eiIvPjwvc3ZnPg=='
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJvdHRsZS13YXRlciI+PHBhdGggZD0iTTE1IDUgSDlBNCA0IDAgMCAwIDUgOXYxMGE0IDQgMCAwIDAgNCA0aDZBNCA0IDAgMCAwIDE5IDE5VjlhNCA0IDAgMCAwLTQtNHoiLz48cGF0aCBkPSJNOSAxMmExLjUuIDEuNSAwIDAgMCAzIDAgMS41IDEuNSAwIDAgMSAzIDAgMy4zMyAzLjMzIDAgMCAxLTMgMyAzLjMzIDMuMzMgMCAwIDEtMy0zWiIvPjxwYXRoIGQ9Ik0xMiA1eiIvPjwvc3ZnPg=='
                 });
             }
         }
