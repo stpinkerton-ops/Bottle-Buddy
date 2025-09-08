@@ -9,39 +9,99 @@
     <style>
         /* 1. THEME & FONT DEFINITION */
         :root {
-            --bg-primary: #F2F2F7; --bg-secondary: #FFFFFF; --bg-tertiary: #E9E9EB;
-            --text-primary: #1D1D1F; --text-secondary: #6E6E73; --accent-color: #007AFF;
-            --separator-color: #E5E5EA; --danger-color: #FF3B30;
+            --bg-primary: #F2F2F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #E9E9EB;
+            --text-primary: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --accent-color: #007AFF;
+            --separator-color: #E5E5EA;
+            --danger-color: #FF3B30;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-primary: #000000; --bg-secondary: #1C1C1E; --bg-tertiary: #2C2C2E;
-                --text-primary: #F5F5F7; --text-secondary: #8E8E93; --accent-color: #0A84FF;
-                --separator-color: #38383A; --danger-color: #FF453A;
+                --bg-primary: #000000;
+                --bg-secondary: #1C1C1E;
+                --bg-tertiary: #2C2C2E;
+                --text-primary: #F5F5F7;
+                --text-secondary: #8E8E93;
+                --accent-color: #0A84FF;
+                --separator-color: #38383A;
+                --danger-color: #FF453A;
             }
         }
 
         /* 2. GENERAL STYLES & LAYOUT */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { -webkit-font-smoothing: antialiased; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
-            background-color: var(--bg-primary); color: var(--text-primary);
-            padding-bottom: 90px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding-bottom: 90px; /* Space for the tab bar */
         }
-        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
-        .header { display: flex; align-items: center; gap: 12px; padding: 20px 0; }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 0;
+        }
         .header img { width: 40px; height: 40px; border-radius: 8px; }
         .header h1 { font-size: 28px; font-weight: 700; margin: 0; }
         .header p { font-size: 16px; color: var(--text-secondary); margin: 2px 0 0 0; }
-        h2 { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+        
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
 
         /* 3. TAB NAVIGATION */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(50px + env(safe-area-inset-bottom)); background-color: var(--bg-secondary); border-top: 0.5px solid var(--separator-color); display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); z-index: 1000; }
-        .tab-button { background: none; border: none; color: var(--text-secondary); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; cursor: pointer; flex-grow: 1; }
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(50px + env(safe-area-inset-bottom));
+            background-color: var(--bg-secondary);
+            border-top: 0.5px solid var(--separator-color);
+            display: flex;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 1000;
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 10px;
+            cursor: pointer;
+            flex-grow: 1;
+        }
         .tab-button.active { color: var(--accent-color); }
         .tab-button svg { width: 24px; height: 24px; }
 
@@ -50,47 +110,58 @@
         .card { background-color: var(--bg-secondary); border-radius: 12px; padding: 16px; }
         .card-title { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
         .card-value { font-size: 28px; font-weight: 600; color: var(--text-primary); }
+        .card-value-small { font-size: 16px; color: var(--text-secondary); }
+
+        .log-section { background-color: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+
         .btn { display: block; width: 100%; font-size: 17px; font-weight: 600; padding: 14px; border-radius: 12px; border: none; cursor: pointer; background-color: var(--accent-color); color: white; }
         .btn-secondary { background-color: var(--bg-tertiary); color: var(--accent-color); }
-        
-        /* Breast Toggle */
-        .breast-toggle { display: flex; background-color: var(--bg-tertiary); border-radius: 8px; padding: 4px; margin-bottom: 16px; }
-        .breast-toggle button { flex: 1; padding: 8px; border: none; background-color: transparent; color: var(--text-primary); font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; }
-        .breast-toggle button.selected { background-color: var(--bg-secondary); }
-        
-        /* Stopwatch & Amount Inputs */
+        .btn-danger { background-color: var(--danger-color); color: white; }
+
         .stopwatch-time { font-size: 64px; font-weight: 300; text-align: center; margin: 20px 0; font-family: monospace; }
         .timer-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
         .amount-input { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
         .amount-input input, .amount-input select { border-radius: 8px; background-color: var(--bg-tertiary); border: none; padding: 12px; font-size: 16px; color: var(--text-primary); }
-        
-        /* Diaper Counters & Severity */
+        .amount-input input { flex-grow: 1; }
+
         .diaper-counters { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .diaper-btn { background-color: var(--bg-secondary); border-radius: 12px; padding: 24px; text-align: center; border: none; cursor: pointer; }
-        .severity-selector { display: none; margin-top: 16px; background-color: var(--bg-secondary); border-radius: 12px; padding: 16px; }
-        .severity-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .severity-buttons button { background-color: var(--bg-tertiary); color: var(--text-primary); }
-        
-        /* Log Lists */
-        .log-list { margin-top: 24px; }
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--separator-color); }
-        .log-item:first-child { border-top: 0.5px solid var(--separator-color); }
-        .log-details { font-size: 16px; }
-        .log-time { font-size: 14px; color: var(--text-secondary); }
-        
-        /* Flat UI for Select dropdowns */
-        select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            padding-right: 20px;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 8px center; background-size: 0.8em;
-        }
+        .diaper-btn .emoji { font-size: 48px; }
+        .diaper-btn .label { font-size: 16px; color: var(--text-primary); margin-top: 8px; }
 
-        /* Original Tracker Form Styles */
+        /* 5. RESTORED TRACKER FORM STYLES */
         .form-section { background-color: var(--bg-secondary); border-radius: 12px; padding: 0 20px; margin-bottom: 24px; }
         .form-row { display: grid; grid-template-columns: 1fr 2fr; align-items: center; gap: 16px; min-height: 48px; border-bottom: 0.5px solid var(--separator-color); }
         .form-row:last-child { border-bottom: none; }
-        /* styles continued in body */
+        .form-row label, .form-row .form-label { font-size: 16px; font-weight: 400; color: var(--text-primary); }
+        .form-row input, .form-row select { width: 100%; background: none; border: none; color: var(--text-primary); font-size: 16px; text-align: right; outline: none; }
+        .form-row input[type="text"] { text-align: left; padding: 10px 0; }
+        .form-row input::placeholder { color: var(--text-secondary); }
+        .toggle-switch { position: relative; display: inline-block; width: 51px; height: 31px; justify-self: end; }
+        .toggle-switch input { display: none; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-tertiary); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #34C759; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        
+        .tracker-item { background-color: var(--bg-secondary); border-radius: 12px; margin-bottom: 16px; padding: 16px; }
+        .tracker-item h4 { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+        .tracker-item .tracker-date { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
+        .reminder-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .reminder-time-input { background-color: var(--bg-tertiary); border: none; border-radius: 6px; padding: 6px 10px; font-size: 15px; color: var(--text-primary); text-align: center; }
+        .action-buttons { display: flex; gap: 16px; margin-top: 16px; justify-content: flex-end; align-items: center; }
+        .btn-small { padding: 6px 12px; font-size: 14px; border-radius: 8px; background-color: var(--bg-tertiary); color: var(--text-primary); border: none; cursor: pointer; }
+        .notify-toggle-group { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .notify-toggle-group .toggle-switch { transform: scale(0.75); }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+
+        @media (max-width: 600px) {
+            .form-row { display: block; padding: 12px 0; }
+            .form-row label, .form-row .form-label { display: block; margin-bottom: 8px; font-weight: 500;}
+            .form-row input, .form-row select { text-align: left; background-color: var(--bg-tertiary); padding: 12px; border-radius: 8px; }
+            .toggle-switch { justify-self: start; }
+        }
     </style>
 </head>
 <body>
@@ -99,20 +170,20 @@
         <div class="container">
             <div class="header">
                 <img src="icon.png" alt="Bottle Buddy Icon">
-                <div><h1>Bottle Buddy</h1><p>Track your feeds with ease</p></div>
+                <div>
+                    <h1>Bottle Buddy</h1>
+                    <p>Track your feeds with ease</p>
+                </div>
             </div>
-            <div id="summary-section"></div>
+            <div id="summary-section">
+                </div>
         </div>
     </div>
 
     <div id="feeding-content" class="tab-content">
         <div class="container">
             <h2>Log a Feed</h2>
-            <div class="card">
-                <div class="breast-toggle">
-                    <button id="breast-left" class="selected" onclick="selectBreast('left')">Left</button>
-                    <button id="breast-right" onclick="selectBreast('right')">Right</button>
-                </div>
+            <div class="log-section">
                 <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
                 <div class="timer-controls">
                     <button class="btn" id="startStopBtn">Start</button>
@@ -120,21 +191,78 @@
                 </div>
                  <div class="amount-input">
                     <input type="number" id="bottleAmount" placeholder="Amount (optional)">
-                    <select id="bottleUnit"><option>oz</option><option>ml</option></select>
+                    <select id="bottleUnit">
+                        <option>oz</option>
+                        <option>ml</option>
+                    </select>
                 </div>
             </div>
-            <button class="btn" id="logFeedBtn" style="margin-top:24px;">Log Feed</button>
-            <div class="log-list" id="feedingLog"></div>
+            <button class="btn" id="logFeedBtn">Log Feed</button>
         </div>
     </div>
 
     <div id="tracker-content" class="tab-content">
          <div class="container">
             <h2>Schedule Events</h2>
-            <div class="form-section">
+             <div class="form-section">
+                <div class="form-row">
+                    <label for="trackerName">Event</label>
+                    <input type="text" id="trackerName" placeholder="Event Name">
                 </div>
+                <div class="form-row">
+                    <label for="trackerDate">Date</label>
+                    <input type="date" id="trackerDate">
+                </div>
+                 <div class="form-row">
+                    <label for="firstEventTime">Start Time</label>
+                    <input type="time" id="firstEventTime">
+                </div>
+                 <div class="form-row">
+                    <label for="endTime">End Time</label>
+                    <input type="time" id="endTime">
+                </div>
+                <div class="form-row">
+                    <label for="intervalAmount">Interval</label>
+                    <input type="number" id="intervalAmount" min="1" value="2">
+                </div>
+                <div class="form-row">
+                    <label for="intervalUnit">Interval Unit</label>
+                    <select id="intervalUnit">
+                         <option value="hours">Hours</option>
+                        <option value="minutes">Minutes</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="alertBefore">Calendar Alert</label>
+                    <input type="number" id="alertBefore" min="0" value="5">
+                </div>
+                <div class="form-row">
+                    <label for="alertUnit">Alert Unit</label>
+                    <select id="alertUnit">
+                        <option value="minutes">Minutes Before</option>
+                        <option value="hours">Hours Before</option>
+                        <option value="days">Days Before</option>
+                    </select>
+                </div>
+                 <div class="form-row">
+                    <label for="dailyReuse" class="form-label">Repeat Daily</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="dailyReuse">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label for="browserNotifications" class="form-label">Enable Notifications</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="browserNotifications" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
             <button class="btn" onclick="addTracker()">Create Tracker</button>
-            <div id="trackersList" style="margin-top:24px;"></div>
+            <div id="trackersList" style="margin-top:24px;">
+                 <div class="empty-state">No trackers created yet.</div>
+            </div>
         </div>
     </div>
     
@@ -146,32 +274,40 @@
                     <div class="emoji">💧</div>
                     <div class="label">Pee</div>
                 </button>
-                 <button class="diaper-btn" onclick="showSeveritySelector()">
+                 <button class="diaper-btn" onclick="logDiaper('poop')">
                     <div class="emoji">💩</div>
                     <div class="label">Poop</div>
                 </button>
             </div>
-            <div class="severity-selector" id="severitySelector">
-                <p style="text-align:center; color:var(--text-secondary); margin-bottom:10px;">Select Severity (3 = worst)</p>
-                <div class="severity-buttons">
-                    <button class="btn" onclick="logDiaper('poop', 1)">1</button>
-                    <button class="btn" onclick="logDiaper('poop', 2)">2</button>
-                    <button class="btn" onclick="logDiaper('poop', 3)">3</button>
+             <div id="diaper-summary-section" style="margin-top:24px;">
                 </div>
-            </div>
-            <div class="log-list" id="diaperLog"></div>
         </div>
     </div>
 
     <div class="tab-bar">
-        </div>
+        <button class="tab-button active" onclick="switchTab('homescreen')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+        </button>
+        <button class="tab-button" onclick="switchTab('feeding')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"/><path d="M12 12v5"/><path d="M12 7h.01"/></svg>
+            Feeding
+        </button>
+        <button class="tab-button" onclick="switchTab('tracker')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            Tracker
+        </button>
+        <button class="tab-button" onclick="switchTab('diaper')">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.59a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            Diapers
+        </button>
+    </div>
 
     <script>
         // --- DATA STATE ---
         let trackers = [];
         let feedings = [];
         let diapers = [];
-        let selectedBreast = 'left';
 
         // --- STOPWATCH STATE ---
         let stopwatchInterval = null;
@@ -180,32 +316,105 @@
 
         // --- CORE APP INITIALIZATION ---
         function init() {
-            // ... (previous init code)
+            document.getElementById('trackerDate').valueAsDate = new Date();
             loadData();
             switchTab('homescreen');
             
             document.getElementById('startStopBtn').addEventListener('click', toggleStopwatch);
             document.getElementById('resetBtn').addEventListener('click', resetStopwatch);
             document.getElementById('logFeedBtn').addEventListener('click', logFeed);
+
+            setInterval(checkTriggers, 5000);
+            requestNotificationPermission();
         }
 
         // --- TAB SWITCHING LOGIC ---
         function switchTab(tabName) {
-            // ... (previous switchTab code)
-            if (tabName === 'feeding') renderFeedingLog();
-            if (tabName === 'diaper') renderDiaperLog();
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`${tabName}-content`).classList.add('active');
+            
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`).classList.add('active');
+
+            if (tabName === 'homescreen') renderHomescreen();
+            if (tabName === 'tracker') renderTrackers();
+            if (tabName === 'diaper') renderDiaperSummary();
         }
 
         // --- TAB 1: HOMESCREEN ---
-        // ... (previous renderHomescreen code)
+        function renderHomescreen() {
+            const todayStart = new Date().setHours(0, 0, 0, 0);
+            
+            const feedingsToday = feedings.filter(f => f.timestamp >= todayStart);
+            const poopsToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'poop').length;
+            const peesToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'pee').length;
+
+            const lastBottle = feedings.slice().reverse().find(f => f.amount > 0);
+            const nextScheduledFeed = trackers
+                .filter(t => new Date(t.date + 'T' + t.firstEventTime) >= new Date())
+                .sort((a,b) => new Date(a.date + 'T' + a.firstEventTime) - new Date(b.date + 'T' + b.firstEventTime))[0];
+
+            const summarySection = document.getElementById('summary-section');
+            summarySection.innerHTML = `
+                <div class="summary-grid">
+                    <div class="card">
+                        <div class="card-title">Feeds Today</div>
+                        <div class="card-value">${feedingsToday.length}</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Diapers Today</div>
+                        <div class="card-value">${poopsToday}💩 / ${peesToday}💧</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Last Bottle</div>
+                    <div class="card-value">${lastBottle ? `${lastBottle.amount} ${lastBottle.unit}` : 'N/A'}</div>
+                </div>
+                <div class="card" style="margin-top:16px;">
+                    <div class="card-title">Next Scheduled Feed</div>
+                    <div class="card-value">${nextScheduledFeed ? `${nextScheduledFeed.name} at ${nextScheduledFeed.firstEventTime}` : 'None scheduled'}</div>
+                </div>
+            `;
+        }
         
         // --- TAB 2: FEEDING TRACKER ---
-        function selectBreast(side) {
-            selectedBreast = side;
-            document.getElementById('breast-left').classList.toggle('selected', side === 'left');
-            document.getElementById('breast-right').classList.toggle('selected', side === 'right');
+        function toggleStopwatch() {
+            const btn = document.getElementById('startStopBtn');
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval);
+                stopwatchInterval = null;
+                elapsedTime += Date.now() - stopwatchStartTime;
+                btn.textContent = 'Resume';
+                btn.classList.add('btn-secondary');
+            } else {
+                stopwatchStartTime = Date.now();
+                stopwatchInterval = setInterval(updateStopwatchDisplay, 100);
+                btn.textContent = 'Pause';
+                btn.classList.remove('btn-secondary');
+            }
         }
 
+        function resetStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchInterval = null;
+            elapsedTime = 0;
+            document.getElementById('startStopBtn').textContent = 'Start';
+            document.getElementById('startStopBtn').classList.remove('btn-secondary');
+            updateStopwatchDisplay();
+        }
+
+        function updateStopwatchDisplay() {
+            let currentElapsedTime = elapsedTime;
+            if (stopwatchInterval) {
+                currentElapsedTime += Date.now() - stopwatchStartTime;
+            }
+            const totalSeconds = Math.floor(currentElapsedTime / 1000);
+            const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+            const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+            const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('stopwatchDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
         function logFeed() {
             const amount = document.getElementById('bottleAmount').value;
             const unit = document.getElementById('bottleUnit').value;
@@ -220,80 +429,252 @@
                 timestamp: Date.now(),
                 duration: duration,
                 amount: amount || 0,
-                unit: unit,
-                side: selectedBreast
+                unit: unit
             });
             saveData();
             alert("Feed logged!");
-            renderFeedingLog(); // Update the log on this page
-            renderHomescreen(); // Update summary on homescreen
+            renderHomescreen(); // Update summary after logging
             resetStopwatch();
             document.getElementById('bottleAmount').value = '';
         }
 
-        function renderFeedingLog() {
-            const container = document.getElementById('feedingLog');
-            container.innerHTML = '<h2>Recent Feedings</h2>' + feedings
-                .slice() // Create a copy to sort
-                .sort((a, b) => b.timestamp - a.timestamp)
-                .map(feed => {
-                    const time = new Date(feed.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    let details = `${feed.duration} on ${feed.side}`;
-                    if (feed.amount > 0) {
-                        details += ` (+ ${feed.amount} ${feed.unit} bottle)`;
-                    }
-                    return `
-                        <div class="log-item">
-                            <div class="log-details">${details}</div>
-                            <div class="log-time">${time}</div>
-                        </div>
-                    `;
-                }).join('');
-        }
+        // --- TAB 3: SCHEDULE TRACKER (Restored Functionality) ---
+        function addTracker() {
+            const tracker = {
+                id: Date.now(),
+                name: document.getElementById('trackerName').value || "Untitled Event",
+                date: document.getElementById('trackerDate').value,
+                firstEventTime: document.getElementById('firstEventTime').value,
+                endTime: document.getElementById('endTime').value,
+                intervalAmount: parseInt(document.getElementById('intervalAmount').value),
+                intervalUnit: document.getElementById('intervalUnit').value,
+                alertBefore: parseInt(document.getElementById('alertBefore').value),
+                alertUnit: document.getElementById('alertUnit').value,
+                dailyReuse: document.getElementById('dailyReuse').checked,
+                enableNotifications: document.getElementById('browserNotifications').checked,
+                active: true
+            };
 
-        // ... (stopwatch functions remain the same)
-
-        // --- TAB 3: SCHEDULE TRACKER (code not shown for brevity) ---
-
-        // --- TAB 4: DIAPER COUNTER ---
-        function showSeveritySelector() {
-            document.getElementById('severitySelector').style.display = 'block';
-        }
-
-        function logDiaper(type, severity = null) {
-            const diaper = { timestamp: Date.now(), type: type };
-            if (severity) {
-                diaper.severity = severity;
-                document.getElementById('severitySelector').style.display = 'none'; // Hide after selection
+            if (!tracker.date || !tracker.firstEventTime || !tracker.endTime) {
+                alert('Please fill in a date, start time, and end time.');
+                return;
             }
-            diapers.push(diaper);
+
+            tracker.reminders = generateReminders(tracker);
+            trackers.push(tracker);
+            saveAndRender();
+            clearTrackerForm();
+        }
+        
+        function clearTrackerForm() {
+            document.getElementById('trackerName').value = '';
+            document.getElementById('firstEventTime').value = '';
+            document.getElementById('endTime').value = '';
+        }
+
+        function generateReminders(tracker) {
+            const reminders = [];
+            const start = timeStringToMinutes(tracker.firstEventTime);
+            const end = timeStringToMinutes(tracker.endTime);
+
+            if (start >= end) { return [{ time: tracker.firstEventTime, triggered: false }]; }
+
+            let intervalMinutes = tracker.intervalUnit === 'hours' ? tracker.intervalAmount * 60 : tracker.intervalAmount;
+            
+            for (let currentTime = start; currentTime < end; currentTime += intervalMinutes) {
+                reminders.push({ time: minutesToTimeString(currentTime), triggered: false });
+            }
+
+            const lastTimeInList = reminders.length > 0 ? reminders[reminders.length - 1].time : null;
+            if (lastTimeInList !== tracker.endTime) {
+                reminders.push({ time: tracker.endTime, triggered: false });
+            }
+            
+            return reminders;
+        }
+        
+        function updateReminderTime(trackerId, reminderIndex, newTime) {
+            const tracker = trackers.find(t => t.id === trackerId);
+            if (!tracker) return;
+            tracker.reminders[reminderIndex].time = newTime;
+            saveAndRender();
+        }
+
+        function renderTrackers() {
+            const container = document.getElementById('trackersList');
+            if (trackers.length === 0) {
+                container.innerHTML = `<div class="empty-state">No trackers created yet.</div>`;
+                return;
+            }
+            container.innerHTML = trackers.map(tracker => `
+                <div class="tracker-item">
+                    <h4>${tracker.name}</h4>
+                    <div class="tracker-date">${formatDate(tracker.date)}</div>
+                    <div class="reminder-list">
+                        ${tracker.reminders.map((reminder, index) => `
+                            <input type="time" class="reminder-time-input" value="${reminder.time}" onchange="updateReminderTime(${tracker.id}, ${index}, this.value)">
+                        `).join('')}
+                    </div>
+                    <div class="action-buttons">
+                        <div class="notify-toggle-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" onchange="toggleNotification(${tracker.id})" ${tracker.enableNotifications ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                            <span>Notify</span>
+                        </div>
+                        <button class="btn-small" onclick="exportToCalendar(${tracker.id})">Add to Calendar</button>
+                        <button class="btn-small btn-danger" onclick="deleteTracker(${tracker.id})">Delete</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        function toggleNotification(trackerId) {
+            const tracker = trackers.find(t => t.id === trackerId);
+            if (tracker) {
+                tracker.enableNotifications = !tracker.enableNotifications;
+                saveData();
+            }
+        }
+        
+        function deleteTracker(id) {
+            trackers = trackers.filter(t => t.id !== id);
+            saveAndRender();
+        }
+
+        function exportToCalendar(trackerId) {
+            const tracker = trackers.find(t => t.id === trackerId);
+            if (!tracker) return;
+            const icsContent = generateICSFile(tracker);
+            downloadFile(`${tracker.name}.ics`, icsContent);
+        }
+
+        function generateICSFile(tracker) {
+            const dateStr = tracker.date.replace(/-/g, '');
+            let alertTrigger = '';
+            if (tracker.alertBefore > 0) {
+                const unit = tracker.alertUnit.charAt(0).toUpperCase();
+                alertTrigger = `BEGIN:VALARM\nACTION:DISPLAY\nDESCRIPTION:Reminder for ${tracker.name}\nTRIGGER:-PT${tracker.alertBefore}${unit}\nEND:VALARM\n`;
+            }
+
+            let icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BottleBuddy//Event Tracker//EN\n`;
+            tracker.reminders.forEach((reminder, index) => {
+                const [hours, minutes] = reminder.time.split(':');
+                const startTime = `${dateStr}T${hours}${minutes}00`;
+                
+                icsContent += `BEGIN:VEVENT\n`;
+                icsContent += `UID:${tracker.id}-${index}@bottlebuddy.app\n`;
+                icsContent += `DTSTAMP:${startTime}Z\n`;
+                icsContent += `DTSTART;TZID=Etc/UTC:${startTime}\n`;
+                if(tracker.dailyReuse) {
+                    icsContent += `RRULE:FREQ=DAILY\n`;
+                }
+                icsContent += `SUMMARY:${tracker.name}\n`;
+                icsContent += alertTrigger;
+                icsContent += `END:VEVENT\n`;
+            });
+            icsContent += 'END:VCALENDAR';
+            return icsContent;
+        }
+        
+        // --- TAB 4: DIAPER COUNTER ---
+        function logDiaper(type) {
+            diapers.push({ timestamp: Date.now(), type: type });
             saveData();
-            renderDiaperLog();
-            renderDiaperSummary(); // Update the card on this page
+            renderDiaperSummary();
             renderHomescreen(); // Update summary on homescreen
         }
 
-        function renderDiaperLog() {
-            const container = document.getElementById('diaperLog');
-            container.innerHTML = '<h2>Recent Changes</h2>' + diapers
-                .slice()
-                .sort((a, b) => b.timestamp - a.timestamp)
-                .map(diaper => {
-                    const time = new Date(diaper.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    let details = diaper.type === 'pee' ? 'Pee 💧' : `Poop 💩 (Severity: ${diaper.severity || 'N/A'})`;
-                    return `
-                        <div class="log-item">
-                            <div class="log-details">${details}</div>
-                            <div class="log-time">${time}</div>
-                        </div>
-                    `;
-                }).join('');
+        function renderDiaperSummary() {
+            const todayStart = new Date().setHours(0, 0, 0, 0);
+            const poopsToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'poop').length;
+            const peesToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'pee').length;
+            
+            const summarySection = document.getElementById('diaper-summary-section');
+            summarySection.innerHTML = `
+                <div class="card">
+                    <div class="card-title">Today's Summary</div>
+                    <div class="card-value">${poopsToday} 💩 / ${peesToday} 💧</div>
+                </div>
+            `;
         }
 
-        // --- DATA PERSISTENCE & OTHER FUNCTIONS ---
-        // ... (All other functions from previous version, not shown for brevity)
+        // --- UTILITY & DATA FUNCTIONS ---
+        function formatDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        function timeStringToMinutes(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
 
-        // Add init call to the end of the script
+        function minutesToTimeString(minutes) {
+            const h = Math.floor(minutes / 60) % 24;
+            const m = minutes % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+        
+        function downloadFile(filename, content) {
+            const link = document.createElement('a');
+            link.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
+            link.download = filename;
+            link.click();
+        }
+        
+        function saveAndRender() {
+            saveData();
+            renderTrackers();
+        }
+
+        function checkTriggers() {
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5);
+            const currentDate = now.toISOString().slice(0, 10);
+
+            trackers.forEach(tracker => {
+                if (tracker.date !== currentDate || !tracker.enableNotifications) return;
+                tracker.reminders.forEach(reminder => {
+                    if (reminder.time === currentTime && !reminder.triggered) {
+                        triggerReminder(tracker, reminder);
+                        reminder.triggered = true; 
+                        saveData();
+                    }
+                });
+            });
+        }
+        
+        function triggerReminder(tracker, reminder) {
+            if (Notification.permission === 'granted') {
+                new Notification(tracker.name, {
+                    body: `It's time for your ${reminder.time} reminder.`,
+                    icon: 'icon.png'
+                });
+            }
+        }
+
+        function saveData() {
+            const appData = { trackers, feedings, diapers };
+            localStorage.setItem('bottleBuddyData', JSON.stringify(appData));
+        }
+
+        function loadData() {
+            const data = localStorage.getItem('bottleBuddyData');
+            if (data) {
+                const appData = JSON.parse(data);
+                trackers = appData.trackers || [];
+                feedings = appData.feedings || [];
+                diapers = appData.diapers || [];
+            }
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
