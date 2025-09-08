@@ -86,6 +86,8 @@
         .notify-toggle-group { display: flex; align-items: center; gap: 8px; font-size: 14px; }
         .notify-toggle-group .toggle-switch { transform: scale(0.75); }
         .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(44, 44, 46, 0.85); color: white; padding: 10px 20px; border-radius: 20px; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s, top 0.5s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .toast.show { top: 30px; opacity: 1; visibility: visible; }
         @media (max-width: 600px) {
             .form-row { display: block; padding: 12px 0; }
             .form-row label, .form-row .form-label { display: block; margin-bottom: 8px; font-weight: 500;}
@@ -153,6 +155,7 @@
     <div id="diaper-content" class="tab-content">
         <div class="container">
             <h2>Log a Diaper</h2>
+            <div id="diaper-summary-section" style="margin-bottom: 24px;"></div>
             <div class="diaper-counters">
                 <button class="diaper-btn" onclick="logDiaper('pee')"><div class="emoji">💧</div><div class="label">Pee</div></button>
                 <button class="diaper-btn" onclick="showSeveritySelector()"><div class="emoji">💩</div><div class="label">Poop</div></button>
@@ -175,6 +178,8 @@
         <button class="tab-button" onclick="switchTab('tracker')"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Tracker</button>
         <button class="tab-button" onclick="switchTab('diaper')"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.59a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Diapers</button>
     </div>
+
+    <div id="toastNotification" class="toast"></div>
 
     <script>
         // --- DATA STATE ---
@@ -218,9 +223,9 @@
             
             let trackerListHtml = trackers.map(tracker => {
                 return `<div class="tracker-summary-item">
-                    <span>${tracker.name}</span>
-                    <span style="color: var(--text-secondary);">${new Date(tracker.date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'})}, ${tracker.firstEventTime}</span>
-                </div>`;
+                        <span>${tracker.name}</span>
+                        <span style="color: var(--text-secondary);">${new Date(tracker.date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'})}, ${tracker.firstEventTime}</span>
+                    </div>`;
             }).join('');
 
             if (trackers.length === 0) {
@@ -277,9 +282,9 @@
         }
         function logFeed() {
             const amount = document.getElementById('bottleAmount').value, unit = document.getElementById('bottleUnit').value, duration = document.getElementById('stopwatchDisplay').textContent;
-            if (!amount && duration === "00:00:00") return alert("Please start the timer or enter a bottle amount.");
+            if (!amount && duration === "00:00:00") return showToast("Please start the timer or enter a bottle amount.");
             feedings.push({ timestamp: Date.now(), duration, amount: amount || 0, unit, side: selectedBreast });
-            saveData(); alert("Feed logged!");
+            saveData(); showToast("Feed logged!");
             renderFeedingLog(); renderHomescreen(); resetStopwatch();
             document.getElementById('bottleAmount').value = '';
         }
@@ -305,10 +310,11 @@
                 alertUnit: document.getElementById('alertUnit').value, dailyReuse: document.getElementById('dailyReuse').checked,
                 enableNotifications: document.getElementById('browserNotifications').checked, active: true
             };
-            if (!tracker.date || !tracker.firstEventTime || !tracker.endTime) return alert('Please fill in a date, start time, and end time.');
+            if (!tracker.date || !tracker.firstEventTime || !tracker.endTime) return showToast('Please fill in a date, start time, and end time.');
             tracker.reminders = generateReminders(tracker);
             trackers.push(tracker);
             saveAndRender(); clearTrackerForm();
+            showToast("Tracker Created!");
         }
         function clearTrackerForm() { document.getElementById('trackerName').value = ''; document.getElementById('firstEventTime').value = ''; document.getElementById('endTime').value = ''; }
         function generateReminders(tracker) {
@@ -339,6 +345,7 @@
             if (severity) { diaper.severity = severity; document.getElementById('severitySelector').style.display = 'none'; }
             diapers.push(diaper); saveData();
             renderDiaperLog(); renderDiaperSummary(); renderHomescreen();
+            showToast("Diaper logged!");
         }
         function renderDiaperLog() {
             const c = document.getElementById('diaperLog');
@@ -356,6 +363,12 @@
         }
 
         // --- UTILITY, DATA & NOTIFICATION FUNCTIONS ---
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
         function formatDate(dStr) { return new Date(dStr+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
         function timeStringToMinutes(tStr) { const [h,m]=tStr.split(':').map(Number); return h*60+m; }
         function minutesToTimeString(m) { return `${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
