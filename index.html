@@ -127,6 +127,11 @@
             font-size: 0.9rem;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: var(--bg-primary) invert(1);
+        }
 
         input:focus, select:focus {
             outline: none;
@@ -175,12 +180,11 @@
             filter: brightness(1.1);
         }
         
-        /* MODIFIED: Simplified action buttons layout */
         .action-buttons {
             display: flex;
             gap: 8px;
             margin-top: 10px;
-            justify-content: flex-end; /* Align buttons to the right */
+            justify-content: flex-end;
         }
         
         .btn-small {
@@ -212,12 +216,17 @@
             font-weight: 500;
             margin-bottom: 8px;
         }
+        .tracker-item .tracker-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
 
         .reminder-list {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-top: 12px;
         }
         
         .reminder-time-input {
@@ -262,13 +271,17 @@
         <div class="header">
             <h1>Bottle Buddy 🍼</h1>
             <p>A simple tracker for your daily events.</p>
-        }
+        </div>
         <div class="content">
             <div class="form-section">
                 <div class="form-row">
                     <div class="form-group full-width">
                         <label for="trackerName">Event Name</label>
                         <input type="text" id="trackerName" placeholder="e.g., Drink Water">
+                    </div>
+                    <div class="form-group">
+                        <label for="trackerDate">Date</label>
+                        <input type="date" id="trackerDate">
                     </div>
                     <div class="form-group">
                         <label for="firstEventTime">Start Time</label>
@@ -278,7 +291,9 @@
                         <label for="endTime">End Time</label>
                         <input type="time" id="endTime">
                     </div>
-                    <div class="form-group">
+                </div>
+                 <div class="form-row">
+                     <div class="form-group">
                         <label for="intervalAmount">Interval</label>
                         <input type="number" id="intervalAmount" min="1" value="2">
                     </div>
@@ -289,8 +304,6 @@
                             <option value="minutes">Minutes</option>
                         </select>
                     </div>
-                </div>
-                 <div class="form-row">
                     <div class="form-group">
                         <label for="alertBefore">Calendar Alert</label>
                         <input type="number" id="alertBefore" min="0" value="5">
@@ -303,12 +316,12 @@
                             <option value="days">Days Before</option>
                         </select>
                     </div>
-                    <div class="form-group checkbox-group">
-                         <input type="checkbox" id="dailyReuse" checked>
-                         <label for="dailyReuse">Repeat daily</label>
-                    </div>
                 </div>
-                <button class="btn" onclick="addTracker()">Create Tracker</button>
+                <div class="form-group checkbox-group">
+                     <input type="checkbox" id="dailyReuse" checked>
+                     <label for="dailyReuse">Repeat daily in calendar</label>
+                </div>
+                <button class="btn" onclick="addTracker()" style="margin-top: 16px;">Create Tracker</button>
             </div>
             <div id="trackersList">
                 <div class="empty-state">No trackers created yet.</div>
@@ -322,16 +335,20 @@
 
         // --- CORE APP INITIALIZATION ---
         function init() {
+            // Set default date to today
+            document.getElementById('trackerDate').valueAsDate = new Date();
             setInterval(checkTriggers, 5000);
             loadData();
             requestNotificationPermission();
         }
 
         // --- TRACKER FUNCTIONS ---
+        // MODIFIED: This function now reads the date from the new input
         function addTracker() {
             const tracker = {
                 id: Date.now(),
                 name: document.getElementById('trackerName').value,
+                date: document.getElementById('trackerDate').value, // <-- ADDED
                 firstEventTime: document.getElementById('firstEventTime').value,
                 endTime: document.getElementById('endTime').value,
                 intervalAmount: parseInt(document.getElementById('intervalAmount').value),
@@ -342,8 +359,8 @@
                 active: true
             };
 
-            if (!tracker.name || !tracker.firstEventTime || !tracker.endTime) {
-                showNotification('Please fill in all required fields', 'error');
+            if (!tracker.name || !tracker.date || !tracker.firstEventTime || !tracker.endTime) {
+                showNotification('Please fill in all required fields');
                 return;
             }
 
@@ -397,7 +414,6 @@
             saveAndRender();
         }
 
-        // MODIFIED: This function now renders a single "Add to Calendar" button
         function renderTrackers() {
             const container = document.getElementById('trackersList');
             if (trackers.length === 0) {
@@ -407,6 +423,7 @@
             container.innerHTML = trackers.map(tracker => `
                 <div class="tracker-item">
                     <h4>${tracker.name}</h4>
+                    <div class="tracker-date">${formatDate(tracker.date)}</div>
                     <div class="reminder-list">
                         ${tracker.reminders.map((reminder, index) => `
                             <input type="time" class="reminder-time-input" value="${reminder.time}" onchange="updateReminderTime(${tracker.id}, ${index}, this.value)">
@@ -433,9 +450,9 @@
             downloadFile(`${tracker.name}.ics`, icsContent);
         }
 
+        // MODIFIED: This function now uses the specific date from the tracker
         function generateICSFile(tracker) {
-            const now = new Date();
-            const todayStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+            const dateStr = tracker.date.replace(/-/g, ''); // Use tracker's date
             let alertTrigger = '';
             if (tracker.alertBefore > 0) {
                 const unit = tracker.alertUnit.charAt(0).toUpperCase();
@@ -445,7 +462,7 @@
             let icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BottleBuddy//Event Tracker//EN\n`;
             tracker.reminders.forEach((reminder, index) => {
                 const [hours, minutes] = reminder.time.split(':');
-                const startTime = `${todayStr}T${hours}${minutes}00`;
+                const startTime = `${dateStr}T${hours}${minutes}00`; // Combine date and time
                 
                 icsContent += `BEGIN:VEVENT\n`;
                 icsContent += `UID:${tracker.id}-${index}@bottlebuddy.app\n`;
@@ -463,6 +480,16 @@
         }
 
         // --- UTILITY FUNCTIONS ---
+        function formatDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00'); // Adjust for timezone
+            return date.toLocaleDateString(undefined, {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
         function timeStringToMinutes(timeStr) {
             const [h, m] = timeStr.split(':').map(Number);
             return h * 60 + m;
@@ -497,15 +524,19 @@
         function checkTriggers() {
             const now = new Date();
             const currentTime = now.toTimeString().slice(0, 5);
+            const currentDate = now.toISOString().slice(0, 10); // YYYY-MM-DD format
 
             if (currentTime === "00:00") {
                 trackers.forEach(t => {
-                    if (t.dailyReuse) { t.reminders.forEach(r => r.triggered = false); }
+                    t.reminders.forEach(r => r.triggered = false);
                 });
                 saveData();
             }
 
             trackers.forEach(tracker => {
+                // Only trigger reminders for trackers set to today's date
+                if (tracker.date !== currentDate) return;
+
                 tracker.reminders.forEach(reminder => {
                     if (reminder.time === currentTime && !reminder.triggered) {
                         triggerReminder(tracker, reminder);
@@ -521,7 +552,7 @@
             if (Notification.permission === 'granted') {
                 new Notification(tracker.name, {
                     body: `It's time for your ${reminder.time} reminder.`,
-                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJvdHRsZS13YXRlciI+PHBhdGggZD0iTTE1IDUgSDlBNCA0IDAgMCAwIDUgOXYxMGE0IDQgMCAwIDAgNCA0aDZBNCA0IDAgMCAwIDE5IDE5VjlhNCA0IDAgMCAwLTQtNHoiLz48cGF0aCBkPSJNOSAxMmExLjUuIDEuNSAwIDAgMCAzIDAgMS41IDEuNSAwIDAgMSAzIDAgMy4zMyAzLjMzIDAgMCAxLTMgMyAzLjMzIDMuMzMgMCAwIDEtMy0zWiIvPjxwYXRoIGQ9Ik0xMiA1eiIvPjwvc3ZnPg=='
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ"VpZmlsbD0ibm9uZS"zdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJvdHRsZS13YXRlciI+PHBhdGggZD0iTTE1IDUgSDlBNCA0IDAgMCAwIDUgOXYxMGE0IDQgMCAwIDAgNCA0aDZBNCA0IDAgMCAwIDE5IDE5VjlhNCA0IDAgMCAwLTQtNHoiLz48cGF0aCBkPSJNOSAxMmExLjUuIDEuNSAwIDAgMCAzIDAgMS41IDEuNSAwIDAgMSAzIDAgMy4zMyAzLjMzIDAgMCAxLTMgMyAzLjMzIDMuMzMgMCAwIDEtMy0zWiIvPjxwYXRoIGQ9Ik0xMiA1eiIvPjwvc3ZnPg=='
                 });
             }
         }
