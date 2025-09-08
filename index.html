@@ -35,7 +35,8 @@
         .tab-button.active { color: var(--accent-color); }
         .tab-button svg { width: 24px; height: 24px; }
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-        .card { background-color: var(--bg-secondary); border-radius: 12px; padding: 16px; }
+        .card { background-color: var(--bg-secondary); border-radius: 12px; padding: 16px; cursor: pointer; transition: transform 0.2s ease-in-out; }
+        .card:hover { transform: translateY(-2px); }
         .card-title { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
         .card-value { font-size: 28px; font-weight: 600; color: var(--text-primary); }
         .tracker-summary-item { display: flex; justify-content: space-between; align-items: center; font-size: 16px; padding: 4px 0;}
@@ -111,7 +112,7 @@
     <div id="feeding-content" class="tab-content">
         <div class="container">
             <h2>Log a Feed</h2>
-            <div class="card">
+            <div class="card" style="cursor: default;">
                 <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
                 <div class="timer-controls">
                     <button class="btn" id="startStopBtn">Start</button>
@@ -234,11 +235,11 @@
 
             document.getElementById('summary-section').innerHTML = `
                 <div class="summary-grid">
-                    <div class="card"><div class="card-title">Feeds Today</div><div class="card-value">${feedingsToday.length}</div></div>
-                    <div class="card"><div class="card-title">Diapers Today</div><div class="card-value">${poopsToday}💩 / ${peesToday}💧</div></div>
+                    <div class="card" onclick="switchTab('feeding')"><div class="card-title">Feeds Today</div><div class="card-value">${feedingsToday.length}</div></div>
+                    <div class="card" onclick="switchTab('diaper')"><div class="card-title">Diapers Today</div><div class="card-value">${poopsToday}💩 / ${peesToday}💧</div></div>
                 </div>
-                <div class="card"><div class="card-title">Last Bottle</div><div class="card-value">${lastBottle ? `${lastBottle.amount} ${lastBottle.unit}` : 'N/A'}</div></div>
-                <div class="card" style="margin-top:16px;">
+                <div class="card" onclick="switchTab('feeding')"><div class="card-title">Last Bottle</div><div class="card-value">${lastBottle ? `${lastBottle.amount} ${lastBottle.unit}` : 'N/A'}</div></div>
+                <div class="card" style="margin-top:16px;" onclick="switchTab('tracker')">
                     <div class="card-title">Trackers</div>
                     ${trackerListHtml}
                 </div>`;
@@ -330,7 +331,7 @@
             const c = document.getElementById('trackersList');
             if (trackers.length === 0) return c.innerHTML = `<div class="empty-state">No trackers created yet.</div>`;
             c.innerHTML = trackers.map(t => `
-                <div class="tracker-item"><h4>${t.name}</h4><div class="tracker-date">${formatDate(t.date)}</div>
+                <div class="tracker-item" style="cursor: default;"><h4>${t.name}</h4><div class="tracker-date">${formatDate(t.date)}</div>
                 <div class="reminder-list">${t.reminders.map((r, i) => `<input type="time" class="reminder-time-input" value="${r.time}" onchange="updateReminderTime(${t.id},${i},this.value)">`).join('')}</div>
                 <div class="action-buttons"><div class="notify-toggle-group"><label class="toggle-switch"><input type="checkbox" onchange="toggleNotification(${t.id})"${t.enableNotifications?'checked':''}> <span class="slider"></span></label><span>Notify</span></div>
                 <button class="btn-small" onclick="exportToCalendar(${t.id})">Calendar</button><button class="btn-small btn-danger" onclick="deleteTracker(${t.id})">Delete</button></div></div>`).join('');
@@ -359,7 +360,7 @@
             const todayStart = new Date().setHours(0,0,0,0);
             const poops=diapers.filter(d=>d.timestamp>=todayStart&&d.type==='poop').length;
             const pees=diapers.filter(d=>d.timestamp>=todayStart&&d.type==='pee').length;
-            document.getElementById('diaper-summary-section').innerHTML=`<div class="card"><div class="card-title">Today's Summary</div><div class="card-value">${poops} 💩 / ${pees} 💧</div></div>`;
+            document.getElementById('diaper-summary-section').innerHTML=`<div class="card" style="cursor: default;"><div class="card-title">Today's Summary</div><div class="card-value">${poops} 💩 / ${pees} 💧</div></div>`;
         }
 
         // --- UTILITY, DATA & NOTIFICATION FUNCTIONS ---
