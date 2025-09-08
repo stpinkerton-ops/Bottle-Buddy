@@ -97,7 +97,13 @@
 <body>
 
     <div id="homescreen-content" class="tab-content active">
-        <div class="container"><div class="header"><img src="icon.png" alt="Bottle Buddy Icon"><div><h1>Bottle Buddy</h1><p>Track your feeds with ease</p></div></div><div id="summary-section"></div></div>
+        <div class="container">
+            <div class="header">
+                <img src="icon.png" alt="Bottle Buddy Icon">
+                <div><h1>Bottle Buddy</h1><p>Track your feeds with ease</p></div>
+            </div>
+            <div id="summary-section"></div>
+        </div>
     </div>
 
     <div id="feeding-content" class="tab-content">
@@ -105,10 +111,19 @@
             <h2>Log a Feed</h2>
             <div class="card">
                 <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
-                <div class="timer-controls"><button class="btn" id="startStopBtn">Start</button><button class="btn btn-secondary" id="resetBtn">Reset</button></div>
-                <div class="amount-input"><input type="number" id="bottleAmount" placeholder="Amount"><select id="bottleUnit"><option>oz</option><option>ml</option></select></div>
-                <div class="card-title" style="margin-top: 20px;">Breast (Optional)</div>
-                <div class="breast-toggle"><button id="breast-left" onclick="selectBreast('left')">Left</button><button id="breast-right" onclick="selectBreast('right')">Right</button></div>
+                <div class="timer-controls">
+                    <button class="btn" id="startStopBtn">Start</button>
+                    <button class="btn btn-secondary" id="resetBtn">Reset</button>
+                </div>
+                 <div class="amount-input">
+                    <input type="number" id="bottleAmount" placeholder="Amount">
+                    <select id="bottleUnit"><option>oz</option><option>ml</option></select>
+                </div>
+                 <div class="card-title" style="margin-top: 20px;">Breast (Optional)</div>
+                <div class="breast-toggle">
+                    <button id="breast-left" onclick="selectBreast('left')">Left</button>
+                    <button id="breast-right" onclick="selectBreast('right')">Right</button>
+                </div>
             </div>
             <button class="btn" id="logFeedBtn">Log Feed</button>
             <div class="log-list" id="feedingLog"></div>
@@ -201,13 +216,11 @@
             const peesToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'pee').length;
             const lastBottle = feedings.slice().reverse().find(f => f.amount > 0);
             
-            let trackerListHtml = trackers
-                .sort((a,b) => new Date(a.date + 'T' + a.firstEventTime) - new Date(b.date + 'T' + b.firstEventTime))
-                .map(tracker => {
-                    return `<div class="tracker-summary-item">
-                        <span>${tracker.name}</span>
-                        <span style="color: var(--text-secondary);">${new Date(tracker.date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'})}, ${tracker.firstEventTime}</span>
-                    </div>`;
+            let trackerListHtml = trackers.map(tracker => {
+                return `<div class="tracker-summary-item">
+                    <span>${tracker.name}</span>
+                    <span style="color: var(--text-secondary);">${new Date(tracker.date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'})}, ${tracker.firstEventTime}</span>
+                </div>`;
             }).join('');
 
             if (trackers.length === 0) {
@@ -251,8 +264,8 @@
         }
         function resetStopwatch() {
             clearInterval(stopwatchInterval); stopwatchInterval = null; elapsedTime = 0;
-            document.getElementById('startStopBtn').textContent = 'Start';
-            document.getElementById('startStopBtn').classList.remove('btn-secondary');
+            const btn = document.getElementById('startStopBtn');
+            btn.textContent = 'Start'; btn.classList.remove('btn-secondary');
             updateStopwatchDisplay();
             selectedBreast = null;
             document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
@@ -306,22 +319,7 @@
             if (!reminders.find(r => r.time === tracker.endTime)) reminders.push({ time: tracker.endTime, triggered: false });
             return reminders;
         }
-        function updateReminderTime(id, i, val) {
-            const tracker = trackers.find(t => t.id === id);
-            if (!tracker) return;
-
-            const oldTimeInMinutes = timeStringToMinutes(tracker.reminders[i].time);
-            const newTimeInMinutes = timeStringToMinutes(val);
-            const timeDiff = newTimeInMinutes - oldTimeInMinutes;
-
-            tracker.reminders[i].time = val; // Update the changed reminder first
-
-            for (let j = i + 1; j < tracker.reminders.length; j++) {
-                const currentReminderTime = timeStringToMinutes(tracker.reminders[j].time);
-                tracker.reminders[j].time = minutesToTimeString(currentReminderTime + timeDiff);
-            }
-            saveAndRender();
-        }
+        function updateReminderTime(id, i, val) { const t = trackers.find(tr => tr.id === id); if(t) {t.reminders[i].time = val; saveAndRender();} }
         function renderTrackers() {
             const c = document.getElementById('trackersList');
             if (trackers.length === 0) return c.innerHTML = `<div class="empty-state">No trackers created yet.</div>`;
@@ -363,19 +361,10 @@
         function minutesToTimeString(m) { return `${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
         function exportToCalendar(id) { const t=trackers.find(tr=>tr.id===id); if(t) downloadFile(`${t.name}.ics`,generateICSFile(t)); }
         function generateICSFile(t) {
-            const dateStr = t.date.replace(/-/g, '');
             let content=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BottleBuddy//EN\n`;
-            let alertDesc = '';
-            if (t.alertBefore > 0) {
-                alertDesc = `\\nAlert: ${t.alertBefore} ${t.alertUnit} before`;
-                const unit = t.alertUnit.charAt(0).toUpperCase();
-                content += `BEGIN:VALARM\nACTION:DISPLAY\nDESCRIPTION:Reminder for ${t.name}\nTRIGGER:-PT${t.alertBefore}${unit}\nEND:VALARM\n`;
-            }
-            
             t.reminders.forEach((r,i) => {
-                const startTimeRaw = `${t.date}T${r.time}`;
-                const startTime = startTimeRaw.replace(/[-:]/g, '');
-                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}\nDTSTART:${startTime}\nSUMMARY:${t.name}\nDESCRIPTION:Scheduled feeding reminder.${alertDesc}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}END:VEVENT\n`;
+                const startTime=`${t.date.replace(/-/g,'')}T${r.time.replace(':','')}00`;
+                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}Z\nDTSTART;TZID=Etc/UTC:${startTime}\nSUMMARY:${t.name}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}END:VEVENT\n`;
             });
             return content+'END:VCALENDAR';
         }
