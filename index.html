@@ -200,24 +200,62 @@
             const poopsToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'poop').length;
             const peesToday = diapers.filter(d => d.timestamp >= todayStart && d.type === 'pee').length;
             const lastBottle = feedings.slice().reverse().find(f => f.amount > 0);
-            let trackerListHtml = trackers.sort((a,b) => new Date(a.date + 'T' + a.firstEventTime) - new Date(b.date + 'T' + b.firstEventTime)).map(tracker => `<div class="tracker-summary-item"><span>${tracker.name}</span><span style="color: var(--text-secondary);">${new Date(tracker.date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'})}, ${tracker.firstEventTime}</span></div>`).join('');
-            if (trackers.length === 0) { trackerListHtml = `<span style="color: var(--text-secondary);">No trackers scheduled.</span>`; }
-            document.getElementById('summary-section').innerHTML = `<div class="summary-grid"><div class="card"><div class="card-title">Feeds Today</div><div class="card-value">${feedingsToday.length}</div></div><div class="card"><div class="card-title">Diapers Today</div><div class="card-value">${poopsToday}💩 / ${peesToday}💧</div></div></div><div class="card"><div class="card-title">Last Bottle</div><div class="card-value">${lastBottle ? `${lastBottle.amount} ${lastBottle.unit}` : 'N/A'}</div></div><div class="card" style="margin-top:16px;"><div class="card-title">Trackers</div>${trackerListHtml}</div>`;
+            
+            let trackerListHtml = trackers
+                .sort((a,b) => new Date(a.date + 'T' + a.firstEventTime) - new Date(b.date + 'T' + b.firstEventTime))
+                .map(tracker => {
+                    return `<div class="tracker-summary-item">
+                        <span>${tracker.name}</span>
+                        <span style="color: var(--text-secondary);">${new Date(tracker.date + 'T00:00:00').toLocaleDateString([], {month:'short', day:'numeric'})}, ${tracker.firstEventTime}</span>
+                    </div>`;
+            }).join('');
+
+            if (trackers.length === 0) {
+                trackerListHtml = `<span style="color: var(--text-secondary);">No trackers scheduled.</span>`;
+            }
+
+            document.getElementById('summary-section').innerHTML = `
+                <div class="summary-grid">
+                    <div class="card"><div class="card-title">Feeds Today</div><div class="card-value">${feedingsToday.length}</div></div>
+                    <div class="card"><div class="card-title">Diapers Today</div><div class="card-value">${poopsToday}💩 / ${peesToday}💧</div></div>
+                </div>
+                <div class="card"><div class="card-title">Last Bottle</div><div class="card-value">${lastBottle ? `${lastBottle.amount} ${lastBottle.unit}` : 'N/A'}</div></div>
+                <div class="card" style="margin-top:16px;">
+                    <div class="card-title">Trackers</div>
+                    ${trackerListHtml}
+                </div>`;
         }
         
         // --- TAB 2: FEEDING TRACKER ---
         function selectBreast(side) {
-            if (selectedBreast === side) { selectedBreast = null; document.getElementById(`breast-${side}`).classList.remove('selected'); } else { selectedBreast = side; document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected')); document.getElementById(`breast-${side}`).classList.add('selected'); }
+            if (selectedBreast === side) {
+                selectedBreast = null;
+                document.getElementById(`breast-${side}`).classList.remove('selected');
+            } else {
+                selectedBreast = side;
+                document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
+                document.getElementById(`breast-${side}`).classList.add('selected');
+            }
         }
         function toggleStopwatch() {
             const btn = document.getElementById('startStopBtn');
-            if (stopwatchInterval) { clearInterval(stopwatchInterval); stopwatchInterval = null; elapsedTime += Date.now() - stopwatchStartTime; btn.textContent = 'Resume'; btn.classList.add('btn-secondary'); } else { stopwatchStartTime = Date.now(); stopwatchInterval = setInterval(updateStopwatchDisplay, 100); btn.textContent = 'Pause'; btn.classList.remove('btn-secondary'); }
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval); stopwatchInterval = null;
+                elapsedTime += Date.now() - stopwatchStartTime;
+                btn.textContent = 'Resume'; btn.classList.add('btn-secondary');
+            } else {
+                stopwatchStartTime = Date.now();
+                stopwatchInterval = setInterval(updateStopwatchDisplay, 100);
+                btn.textContent = 'Pause'; btn.classList.remove('btn-secondary');
+            }
         }
         function resetStopwatch() {
             clearInterval(stopwatchInterval); stopwatchInterval = null; elapsedTime = 0;
-            const btn = document.getElementById('startStopBtn');
-            btn.textContent = 'Start'; btn.classList.remove('btn-secondary');
-            updateStopwatchDisplay(); selectedBreast = null; document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('startStopBtn').textContent = 'Start';
+            document.getElementById('startStopBtn').classList.remove('btn-secondary');
+            updateStopwatchDisplay();
+            selectedBreast = null;
+            document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
         }
         function updateStopwatchDisplay() {
             let current = elapsedTime + (stopwatchInterval ? Date.now() - stopwatchStartTime : 0);
@@ -228,16 +266,17 @@
             const amount = document.getElementById('bottleAmount').value, unit = document.getElementById('bottleUnit').value, duration = document.getElementById('stopwatchDisplay').textContent;
             if (!amount && duration === "00:00:00") return alert("Please start the timer or enter a bottle amount.");
             feedings.push({ timestamp: Date.now(), duration, amount: amount || 0, unit, side: selectedBreast });
-            saveData(); alert("Feed logged!"); renderFeedingLog(); renderHomescreen(); resetStopwatch();
+            saveData(); alert("Feed logged!");
+            renderFeedingLog(); renderHomescreen(); resetStopwatch();
             document.getElementById('bottleAmount').value = '';
         }
         function renderFeedingLog() {
-            const c = document.getElementById('feedingLog');
-            c.innerHTML = '<h2>Recent Feedings</h2>' + feedings.slice().sort((a, b) => b.timestamp - a.timestamp).map(f => {
-                const dateTime = new Date(f.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                let sideInfo = f.side ? ` on ${f.side}` : '';
-                let durationInfo = f.duration !== "00:00:00" ? `${f.duration}${sideInfo}` : '';
-                let bottleInfo = f.amount > 0 ? `${f.amount} ${f.unit} bottle` : '';
+            const container = document.getElementById('feedingLog');
+            container.innerHTML = '<h2>Recent Feedings</h2>' + feedings.slice().sort((a, b) => b.timestamp - a.timestamp).map(feed => {
+                const dateTime = new Date(feed.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                let sideInfo = feed.side ? ` on ${feed.side}` : '';
+                let durationInfo = feed.duration !== "00:00:00" ? `${feed.duration}${sideInfo}` : '';
+                let bottleInfo = feed.amount > 0 ? `${feed.amount} ${feed.unit} bottle` : '';
                 let details = [durationInfo, bottleInfo].filter(Boolean).join(' + ');
                 return `<div class="log-item"><div class="log-details">${details || 'Logged Event'}</div><div class="log-time">${dateTime}</div></div>`;
             }).join('');
@@ -246,14 +285,17 @@
         // --- TAB 3: SCHEDULE TRACKER ---
         function addTracker() {
             const tracker = {
-                id: Date.now(), name: document.getElementById('trackerName').value || "Untitled Event", date: document.getElementById('trackerDate').value,
-                firstEventTime: document.getElementById('firstEventTime').value, endTime: document.getElementById('endTime').value,
-                intervalAmount: parseInt(document.getElementById('intervalAmount').value), intervalUnit: document.getElementById('intervalUnit').value,
-                alertBefore: parseInt(document.getElementById('alertBefore').value), alertUnit: document.getElementById('alertUnit').value,
-                dailyReuse: document.getElementById('dailyReuse').checked, enableNotifications: document.getElementById('browserNotifications').checked, active: true
+                id: Date.now(), name: document.getElementById('trackerName').value || "Untitled Event",
+                date: document.getElementById('trackerDate').value, firstEventTime: document.getElementById('firstEventTime').value,
+                endTime: document.getElementById('endTime').value, intervalAmount: parseInt(document.getElementById('intervalAmount').value),
+                intervalUnit: document.getElementById('intervalUnit').value, alertBefore: parseInt(document.getElementById('alertBefore').value),
+                alertUnit: document.getElementById('alertUnit').value, dailyReuse: document.getElementById('dailyReuse').checked,
+                enableNotifications: document.getElementById('browserNotifications').checked, active: true
             };
             if (!tracker.date || !tracker.firstEventTime || !tracker.endTime) return alert('Please fill in a date, start time, and end time.');
-            tracker.reminders = generateReminders(tracker); trackers.push(tracker); saveAndRender(); clearTrackerForm();
+            tracker.reminders = generateReminders(tracker);
+            trackers.push(tracker);
+            saveAndRender(); clearTrackerForm();
         }
         function clearTrackerForm() { document.getElementById('trackerName').value = ''; document.getElementById('firstEventTime').value = ''; document.getElementById('endTime').value = ''; }
         function generateReminders(tracker) {
@@ -265,11 +307,15 @@
             return reminders;
         }
         function updateReminderTime(id, i, val) {
-            const tracker = trackers.find(t => t.id === id); if (!tracker) return;
+            const tracker = trackers.find(t => t.id === id);
+            if (!tracker) return;
+
             const oldTimeInMinutes = timeStringToMinutes(tracker.reminders[i].time);
             const newTimeInMinutes = timeStringToMinutes(val);
             const timeDiff = newTimeInMinutes - oldTimeInMinutes;
-            tracker.reminders[i].time = val;
+
+            tracker.reminders[i].time = val; // Update the changed reminder first
+
             for (let j = i + 1; j < tracker.reminders.length; j++) {
                 const currentReminderTime = timeStringToMinutes(tracker.reminders[j].time);
                 tracker.reminders[j].time = minutesToTimeString(currentReminderTime + timeDiff);
@@ -315,27 +361,25 @@
         function formatDate(dStr) { return new Date(dStr+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
         function timeStringToMinutes(tStr) { const [h,m]=tStr.split(':').map(Number); return h*60+m; }
         function minutesToTimeString(m) { return `${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
-        function exportToCalendar(id) { const t=trackers.find(tr=>tr.id===id); if(t) downloadFile(t); }
+        function exportToCalendar(id) { const t=trackers.find(tr=>tr.id===id); if(t) downloadFile(`${t.name}.ics`,generateICSFile(t)); }
         function generateICSFile(t) {
+            const dateStr = t.date.replace(/-/g, '');
             let content=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BottleBuddy//EN\n`;
             let alertDesc = '';
-            if (t.alertBefore > 0) { alertDesc = `\\n\\nAlert: ${t.alertBefore} ${t.alertUnit.toLowerCase()} before.`; }
+            if (t.alertBefore > 0) {
+                alertDesc = `\\nAlert: ${t.alertBefore} ${t.alertUnit} before`;
+                const unit = t.alertUnit.charAt(0).toUpperCase();
+                content += `BEGIN:VALARM\nACTION:DISPLAY\nDESCRIPTION:Reminder for ${t.name}\nTRIGGER:-PT${t.alertBefore}${unit}\nEND:VALARM\n`;
+            }
+            
             t.reminders.forEach((r,i) => {
                 const startTimeRaw = `${t.date}T${r.time}`;
                 const startTime = startTimeRaw.replace(/[-:]/g, '');
-                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}\nDTSTART:${startTime}\nSUMMARY:${t.name}\nDESCRIPTION:Scheduled feeding reminder.${alertDesc}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}`;
-                if (t.alertBefore > 0) {
-                    const unit = t.alertUnit.charAt(0).toUpperCase();
-                    content += `BEGIN:VALARM\nACTION:DISPLAY\nDESCRIPTION:Reminder\nTRIGGER:-PT${t.alertBefore}${unit}\nEND:VALARM\n`;
-                }
-                content += `END:VEVENT\n`;
+                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}\nDTSTART:${startTime}\nSUMMARY:${t.name}\nDESCRIPTION:Scheduled feeding reminder.${alertDesc}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}END:VEVENT\n`;
             });
             return content+'END:VCALENDAR';
         }
-        function downloadFile(t) { 
-            const content = generateICSFile(t);
-            window.open('data:text/calendar;charset=utf-8,' + encodeURIComponent(content));
-        }
+        function downloadFile(fname,text) { const a=document.createElement('a'); a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(text); a.download=fname; a.click(); }
         function saveData() { localStorage.setItem('bottleBuddyData', JSON.stringify({trackers,feedings,diapers})); }
         function loadData() { const d=localStorage.getItem('bottleBuddyData'); if(d){const p=JSON.parse(d); trackers=p.trackers||[]; feedings=p.feedings||[]; diapers=p.diapers||[];} }
         function saveAndRender() { saveData(); renderTrackers(); }
