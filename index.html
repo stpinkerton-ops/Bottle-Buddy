@@ -62,7 +62,7 @@
         .log-item:first-child { border-top: 0.5px solid var(--separator-color); }
         .log-details { font-size: 16px; }
         .log-time { font-size: 14px; color: var(--text-secondary); text-align: right; }
-        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 20px; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 0.8em; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 20px; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 0.8em; }
         .form-section { background-color: var(--bg-secondary); border-radius: 12px; padding: 0 20px; margin-bottom: 24px; }
         .form-row { display: grid; grid-template-columns: 1fr 2fr; align-items: center; gap: 16px; min-height: 48px; border-bottom: 0.5px solid var(--separator-color); }
         .form-row:last-child { border-bottom: none; }
@@ -378,7 +378,25 @@
             let content=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BottleBuddy//EN\n`;
             t.reminders.forEach((r,i) => {
                 const startTime=`${t.date.replace(/-/g,'')}T${r.time.replace(':','')}00`;
-                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}\nDTSTART:${startTime}\nSUMMARY:${t.name}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}END:VEVENT\n`;
+                let alarmContent = '';
+                if (t.alertBefore > 0) {
+                    let trigger;
+                    switch (t.alertUnit) {
+                        case 'minutes':
+                            trigger = `-PT${t.alertBefore}M`;
+                            break;
+                        case 'hours':
+                            trigger = `-PT${t.alertBefore}H`;
+                            break;
+                        case 'days':
+                            trigger = `-P${t.alertBefore}D`;
+                            break;
+                    }
+                    if (trigger) {
+                        alarmContent = `BEGIN:VALARM\nACTION:DISPLAY\nDESCRIPTION:${t.name}\nTRIGGER;VALUE=DURATION:${trigger}\nEND:VALARM\n`;
+                    }
+                }
+                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}\nDTSTART:${startTime}\nSUMMARY:${t.name}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}${alarmContent}END:VEVENT\n`;
             });
             return content+'END:VCALENDAR';
         }
