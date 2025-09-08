@@ -98,7 +98,7 @@
 
         .form-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 16px;
         }
@@ -156,7 +156,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding-top: 20px;
         }
         input[type="checkbox"] {
             width: 16px;
@@ -282,10 +281,16 @@
             .content {
                 padding: 16px;
             }
-            /* MODIFIED: Changed grid to flexbox for a more robust single-column layout */
+            /* MODIFIED: Changed to a block layout for robust stacking */
             .form-row {
-                display: flex;
-                flex-direction: column;
+                display: block;
+            }
+            .form-group {
+                width: 100%;
+                margin-bottom: 16px;
+            }
+            .form-group:last-child {
+                margin-bottom: 0;
             }
             .header {
                 padding: 20px 16px;
@@ -306,10 +311,14 @@
                         <label for="trackerName">Event Name</label>
                         <input type="text" id="trackerName" placeholder="e.g., Drink Water">
                     </div>
-                    <div class="form-group">
+                </div>
+                <div class="form-row">
+                     <div class="form-group full-width">
                         <label for="trackerDate">Date</label>
                         <input type="date" id="trackerDate">
                     </div>
+                </div>
+                 <div class="form-row">
                     <div class="form-group">
                         <label for="firstEventTime">Start Time</label>
                         <input type="time" id="firstEventTime">
@@ -319,7 +328,7 @@
                         <input type="time" id="endTime">
                     </div>
                 </div>
-                 <div class="form-row">
+                <div class="form-row">
                      <div class="form-group">
                         <label for="intervalAmount">Interval</label>
                         <input type="number" id="intervalAmount" min="1" value="2">
@@ -331,6 +340,8 @@
                             <option value="minutes">Minutes</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="alertBefore">Calendar Alert</label>
                         <input type="number" id="alertBefore" min="0" value="5">
@@ -344,9 +355,11 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group checkbox-group">
-                     <input type="checkbox" id="dailyReuse">
-                     <label for="dailyReuse">Repeat daily in calendar</label>
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                         <input type="checkbox" id="dailyReuse">
+                         <label for="dailyReuse">Repeat daily in calendar</label>
+                    </div>
                 </div>
                 <button class="btn" onclick="addTracker()" style="margin-top: 16px;">Create Tracker</button>
             </div>
