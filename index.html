@@ -377,7 +377,7 @@
             let content=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BottleBuddy//EN\n`;
             t.reminders.forEach((r,i) => {
                 const startTime=`${t.date.replace(/-/g,'')}T${r.time.replace(':','')}00`;
-                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}Z\nDTSTART;TZID=Etc/UTC:${startTime}\nSUMMARY:${t.name}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}END:VEVENT\n`;
+                content+=`BEGIN:VEVENT\nUID:${t.id}-${i}@bottlebuddy.app\nDTSTAMP:${startTime}\nDTSTART:${startTime}\nSUMMARY:${t.name}\n${t.dailyReuse?'RRULE:FREQ=DAILY\n':''}END:VEVENT\n`;
             });
             return content+'END:VCALENDAR';
         }
