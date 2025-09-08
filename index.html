@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bottle Buddy</title>
-
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
-
     <style>
         /* 1. THEME & FONT DEFINITION */
         :root {
@@ -268,6 +266,30 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .notification.show { opacity: 1; transform: translate(-50%, -10px); }
+
+        /* MODIFIED: Added responsive design for mobile */
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+            .container {
+                margin: 0;
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+                min-height: 100vh;
+            }
+            .content {
+                padding: 16px;
+            }
+            .form-row {
+                /* Switch to a single column layout on small screens */
+                grid-template-columns: 1fr;
+            }
+            .header {
+                padding: 20px 16px;
+            }
+        }
     </style>
 </head>
 <body>
