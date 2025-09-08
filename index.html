@@ -117,6 +117,7 @@
             font-weight: 500;
             color: var(--text-secondary);
             margin-bottom: 6px;
+            cursor: pointer;
         }
 
         input, select {
@@ -161,6 +162,7 @@
             width: 16px;
             height: 16px;
             accent-color: var(--accent-color);
+            cursor: pointer;
         }
 
         /* 4. BUTTONS */
@@ -181,11 +183,14 @@
             filter: brightness(1.1);
         }
         
+        /* MODIFIED: Added alignment and spacing for new checkbox */
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 16px;
             margin-top: 10px;
             justify-content: flex-end;
+            align-items: center;
+            flex-wrap: wrap;
         }
         
         .btn-small {
@@ -281,7 +286,6 @@
             .content {
                 padding: 16px;
             }
-            /* MODIFIED: Changed to a block layout for robust stacking */
             .form-row {
                 display: block;
             }
@@ -360,6 +364,10 @@
                          <input type="checkbox" id="dailyReuse">
                          <label for="dailyReuse">Repeat daily in calendar</label>
                     </div>
+                    <div class="form-group checkbox-group">
+                         <input type="checkbox" id="browserNotifications" checked>
+                         <label for="browserNotifications">Enable notifications</label>
+                    </div>
                 </div>
                 <button class="btn" onclick="addTracker()" style="margin-top: 16px;">Create Tracker</button>
             </div>
@@ -395,6 +403,7 @@
                 alertBefore: parseInt(document.getElementById('alertBefore').value),
                 alertUnit: document.getElementById('alertUnit').value,
                 dailyReuse: document.getElementById('dailyReuse').checked,
+                enableNotifications: document.getElementById('browserNotifications').checked,
                 active: true
             };
 
@@ -453,6 +462,7 @@
             saveAndRender();
         }
 
+        // MODIFIED: Added an editable "Notify" checkbox to each tracker
         function renderTrackers() {
             const container = document.getElementById('trackersList');
             if (trackers.length === 0) {
@@ -469,10 +479,23 @@
                         `).join('')}
                     </div>
                     <div class="action-buttons">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="notify-${tracker.id}" onchange="toggleNotification(${tracker.id})" ${tracker.enableNotifications ? 'checked' : ''}>
+                            <label for="notify-${tracker.id}">Notify</label>
+                        </div>
                         <button class="btn-small" onclick="exportToCalendar(${tracker.id})">Add to Calendar</button>
                         <button class="btn-small btn-danger" onclick="deleteTracker(${tracker.id})">Delete</button>
                     </div>
                 </div>`).join('');
+        }
+
+        // MODIFIED: New function to toggle a tracker's notification setting
+        function toggleNotification(trackerId) {
+            const tracker = trackers.find(t => t.id === trackerId);
+            if (tracker) {
+                tracker.enableNotifications = !tracker.enableNotifications;
+                saveData(); // Save the change without re-rendering the whole list
+            }
         }
         
         function deleteTracker(id) {
@@ -586,7 +609,7 @@
         
         function triggerReminder(tracker, reminder) {
             showNotification(`🔔 ${tracker.name} Reminder!`);
-            if (Notification.permission === 'granted') {
+            if (tracker.enableNotifications && Notification.permission === 'granted') {
                 new Notification(tracker.name, {
                     body: `It's time for your ${reminder.time} reminder.`,
                     icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJvdHRsZS13YXRlciI+PHBhdGggZD0iTTE1IDUgSDlBNCA0IDAgMCAwIDUgOXYxMGE0IDQgMCAwIDAgNCA0aDZBNCA0IDAgMCAwIDE5IDE5VjlhNCA0IDAgMCAwLTQtNHoiLz48cGF0aCBkPSJNOSAxMmExLjUuIDEuNSAwIDAgMCAzIDAgMS41IDEuNSAwIDAgMSAzIDAgMy4zMyAzLjMzIDAgMCAxLTMgMyAzLjMzIDMuMzMgMCAwIDEtMy0zWiIvPjxwYXRoIGQ9Ik0xMiA1eiIvPjwvc3ZnPg=='
