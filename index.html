@@ -267,7 +267,7 @@
         }
         .notification.show { opacity: 1; transform: translate(-50%, -10px); }
 
-        /* MODIFIED: Added responsive design for mobile */
+        /* 7. RESPONSIVE DESIGN */
         @media (max-width: 600px) {
             body {
                 padding: 0;
@@ -282,9 +282,10 @@
             .content {
                 padding: 16px;
             }
+            /* MODIFIED: Changed grid to flexbox for a more robust single-column layout */
             .form-row {
-                /* Switch to a single column layout on small screens */
-                grid-template-columns: 1fr;
+                display: flex;
+                flex-direction: column;
             }
             .header {
                 padding: 20px 16px;
