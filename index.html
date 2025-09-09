@@ -118,11 +118,25 @@
         <div class="container">
             <h2>Log a Feed</h2>
             <div class="card" style="cursor: default;">
-                <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
-                <div class="timer-controls">
-                    <button class="btn" id="startStopBtn">Start</button>
-                    <button class="btn btn-secondary" id="resetBtn">Reset</button>
+                <div class="card-title" style="margin: 0 0 8px 0;">Entry Mode</div>
+                <div class="breast-toggle">
+                    <button id="mode-timer" class="selected" onclick="setFeedEntryMode('timer')">Timer</button>
+                    <button id="mode-manual" onclick="setFeedEntryMode('manual')">Manual Time</button>
                 </div>
+                
+                <div id="timer-entry-section">
+                    <div class="stopwatch-time" id="stopwatchDisplay">00:00:00</div>
+                    <div class="timer-controls">
+                        <button class="btn" id="startStopBtn">Start</button>
+                        <button class="btn btn-secondary" id="resetBtn">Reset</button>
+                    </div>
+                </div>
+
+                <div id="manual-entry-section" style="display: none; padding: 20px 0;">
+                     <label for="manualEventTime" style="display: block; color: var(--text-secondary); margin-bottom: 8px;">Event Time</label>
+                     <input type="datetime-local" id="manualEventTime" style="width: 100%; border-radius: 8px; background-color: var(--bg-tertiary); border: none; padding: 12px; font-size: 16px; color: var(--text-primary);">
+                </div>
+
                  <div class="amount-input">
                     <input type="number" id="bottleAmount" placeholder="Amount">
                     <select id="bottleUnit"><option>oz</option><option>ml</option></select>
@@ -191,7 +205,8 @@
         // --- DATA STATE ---
         let trackers = [], feedings = [], diapers = [];
         let selectedBreast = null;
-        let editingTimestamp = null; // To track which feed is being edited
+        let editingTimestamp = null;
+        let feedEntryMode = 'timer';
 
         // --- STOPWATCH STATE ---
         let stopwatchInterval = null, stopwatchStartTime = 0, elapsedTime = 0;
@@ -232,7 +247,28 @@
             document.getElementById('summary-section').innerHTML = `<div class="summary-grid"><div class="card" onclick="switchTab('feeding')"><div class="card-title">Feeds Today</div><div class="card-value">${feedingsToday.length}</div></div><div class="card" onclick="switchTab('diaper')"><div class="card-title">Diapers Today</div><div class="card-value">${poopsToday}💩 / ${peesToday}💧</div></div></div><div class="card" onclick="switchTab('feeding')"><div class="card-title">Last Bottle</div><div class="card-value">${lastBottle ? `${lastBottle.amount} ${lastBottle.unit}` : 'N/A'}</div></div><div class="card" style="margin-top:16px;" onclick="switchTab('tracker')"><div class="card-title">Trackers</div>${trackerListHtml}</div>`;
         }
         
-        // --- TAB 2: FEEDING TRACKER (with inline edit) ---
+        // --- TAB 2: FEEDING TRACKER ---
+        function setFeedEntryMode(mode) {
+            feedEntryMode = mode;
+            const timerSection = document.getElementById('timer-entry-section');
+            const manualSection = document.getElementById('manual-entry-section');
+            const timerBtn = document.getElementById('mode-timer');
+            const manualBtn = document.getElementById('mode-manual');
+            if (mode === 'timer') {
+                timerSection.style.display = 'block';
+                manualSection.style.display = 'none';
+                timerBtn.classList.add('selected');
+                manualBtn.classList.remove('selected');
+            } else {
+                timerSection.style.display = 'none';
+                manualSection.style.display = 'block';
+                timerBtn.classList.remove('selected');
+                manualBtn.classList.add('selected');
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('manualEventTime').value = now.toISOString().slice(0, 16);
+            }
+        }
         function selectBreast(side) {
             selectedBreast = (selectedBreast === side) ? null : side;
             document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
@@ -264,9 +300,23 @@
             document.getElementById('stopwatchDisplay').textContent = `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
         }
         function logFeed() {
-            const amount = document.getElementById('bottleAmount').value, unit = document.getElementById('bottleUnit').value, duration = document.getElementById('stopwatchDisplay').textContent;
-            if (!amount && duration === "00:00:00") return showToast("Please start the timer or enter a bottle amount.");
-            feedings.push({ timestamp: Date.now(), duration, amount: amount || 0, unit, side: selectedBreast });
+            const amount = document.getElementById('bottleAmount').value;
+            const unit = document.getElementById('bottleUnit').value;
+            let timestamp, duration;
+
+            if (feedEntryMode === 'timer') {
+                duration = document.getElementById('stopwatchDisplay').textContent;
+                if (!amount && duration === "00:00:00") return showToast("Please start the timer or enter an amount.");
+                timestamp = Date.now();
+            } else {
+                const manualTimeValue = document.getElementById('manualEventTime').value;
+                if (!manualTimeValue) return showToast("Please enter an event time.");
+                if (!amount) return showToast("Please enter a bottle amount.");
+                timestamp = new Date(manualTimeValue).getTime();
+                duration = "00:00:00";
+            }
+            
+            feedings.push({ timestamp, duration, amount: amount || 0, unit, side: selectedBreast });
             saveData(); showToast("Feed logged!");
             renderFeedingLog(); renderHomescreen(); resetStopwatch();
         }
@@ -306,7 +356,6 @@
         function renderFeedingLog() {
             const container = document.getElementById('feedingLog');
             container.innerHTML = '<h2>Recent Feedings</h2>' + feedings.slice().sort((a, b) => b.timestamp - a.timestamp).map(feed => {
-                // --- Inline Edit View ---
                 if (feed.timestamp === editingTimestamp) {
                     return `<div class="log-item">
                                 <div class="inline-edit-form">
@@ -328,7 +377,6 @@
                                 </div>
                             </div>`;
                 }
-                // --- Default Display View ---
                 const dateTime = new Date(feed.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 let sideInfo = feed.side ? ` on ${feed.side}` : '';
                 let durationInfo = feed.duration !== "00:00:00" ? `${feed.duration}${sideInfo}` : '';
