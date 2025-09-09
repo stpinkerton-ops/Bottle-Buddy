@@ -58,10 +58,12 @@
         .severity-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .severity-buttons button { background-color: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer;}
         .log-list { margin-top: 24px; }
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--separator-color); }
+        .log-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 0; border-bottom: 0.5px solid var(--separator-color); }
         .log-item:first-child { border-top: 0.5px solid var(--separator-color); }
+        .log-item-info { flex-grow: 1; }
         .log-details { font-size: 16px; }
-        .log-time { font-size: 14px; color: var(--text-secondary); text-align: right; }
+        .log-time { font-size: 14px; color: var(--text-secondary); }
+        .log-item-actions { display: flex; gap: 8px; }
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 20px; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 0.8em; }
         .form-section { background-color: var(--bg-secondary); border-radius: 12px; padding: 0 20px; margin-bottom: 24px; }
         .form-row { display: grid; grid-template-columns: 1fr 2fr; align-items: center; gap: 16px; min-height: 48px; border-bottom: 0.5px solid var(--separator-color); }
@@ -186,6 +188,7 @@
         // --- DATA STATE ---
         let trackers = [], feedings = [], diapers = [];
         let selectedBreast = null;
+        let editingTimestamp = null; // To track which feed is being edited
 
         // --- STOPWATCH STATE ---
         let stopwatchInterval = null, stopwatchStartTime = 0, elapsedTime = 0;
@@ -253,7 +256,7 @@
             } else {
                 selectedBreast = side;
                 document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
-                document.getElementById(`breast-${side}`).classList.add('selected');
+                if (side) document.getElementById(`breast-${side}`).classList.add('selected');
             }
         }
         function toggleStopwatch() {
@@ -269,12 +272,18 @@
             }
         }
         function resetStopwatch() {
+            // This button now also cancels an edit
             clearInterval(stopwatchInterval); stopwatchInterval = null; elapsedTime = 0;
             const btn = document.getElementById('startStopBtn');
             btn.textContent = 'Start'; btn.classList.remove('btn-secondary');
             updateStopwatchDisplay();
-            selectedBreast = null;
-            document.querySelectorAll('.breast-toggle button').forEach(btn => btn.classList.remove('selected'));
+            selectBreast(null); // Deselect breast buttons
+            document.getElementById('bottleAmount').value = ''; // Clear amount
+            
+            // Cancel edit mode
+            editingTimestamp = null;
+            document.getElementById('logFeedBtn').textContent = 'Log Feed';
+            showToast('Reset / Edit Canceled');
         }
         function updateStopwatchDisplay() {
             let current = elapsedTime + (stopwatchInterval ? Date.now() - stopwatchStartTime : 0);
@@ -284,10 +293,50 @@
         function logFeed() {
             const amount = document.getElementById('bottleAmount').value, unit = document.getElementById('bottleUnit').value, duration = document.getElementById('stopwatchDisplay').textContent;
             if (!amount && duration === "00:00:00") return showToast("Please start the timer or enter a bottle amount.");
-            feedings.push({ timestamp: Date.now(), duration, amount: amount || 0, unit, side: selectedBreast });
-            saveData(); showToast("Feed logged!");
-            renderFeedingLog(); renderHomescreen(); resetStopwatch();
+
+            if (editingTimestamp) {
+                // Find the feed and update it
+                const feed_index = feedings.findIndex(f => f.timestamp === editingTimestamp);
+                if (feed_index !== -1) {
+                    feedings[feed_index] = { ...feedings[feed_index], duration, amount: amount || 0, unit, side: selectedBreast };
+                    showToast("Feed updated!");
+                }
+                editingTimestamp = null; // Reset editing state
+                document.getElementById('logFeedBtn').textContent = 'Log Feed';
+            } else {
+                // Add a new feed
+                feedings.push({ timestamp: Date.now(), duration, amount: amount || 0, unit, side: selectedBreast });
+                showToast("Feed logged!");
+            }
+
+            saveData();
+            renderFeedingLog();
+            renderHomescreen();
+            resetStopwatch();
             document.getElementById('bottleAmount').value = '';
+        }
+        function editFeed(timestamp) {
+            const feed = feedings.find(f => f.timestamp === timestamp);
+            if (!feed) return;
+            
+            // Populate the form with the log's data
+            document.getElementById('bottleAmount').value = feed.amount;
+            document.getElementById('bottleUnit').value = feed.unit;
+            // Note: We don't try to restore the stopwatch state, as that's complex. User can re-time if needed.
+            selectBreast(feed.side);
+
+            // Set editing mode
+            editingTimestamp = timestamp;
+            document.getElementById('logFeedBtn').textContent = 'Update Feed';
+            window.scrollTo(0, 0); // Scroll to top to see the form
+        }
+        function deleteFeed(timestamp) {
+            if (!confirm('Are you sure you want to delete this feed?')) return;
+            feedings = feedings.filter(f => f.timestamp !== timestamp);
+            saveData();
+            renderFeedingLog();
+            renderHomescreen();
+            showToast('Feed deleted.');
         }
         function renderFeedingLog() {
             const container = document.getElementById('feedingLog');
@@ -297,7 +346,16 @@
                 let durationInfo = feed.duration !== "00:00:00" ? `${feed.duration}${sideInfo}` : '';
                 let bottleInfo = feed.amount > 0 ? `${feed.amount} ${feed.unit} bottle` : '';
                 let details = [durationInfo, bottleInfo].filter(Boolean).join(' + ');
-                return `<div class="log-item"><div class="log-details">${details || 'Logged Event'}</div><div class="log-time">${dateTime}</div></div>`;
+                return `<div class="log-item">
+                            <div class="log-item-info">
+                                <div class="log-details">${details || 'Logged Event'}</div>
+                                <div class="log-time">${dateTime}</div>
+                            </div>
+                            <div class="log-item-actions">
+                                <button class="btn-small" onclick="editFeed(${feed.timestamp})">Edit</button>
+                                <button class="btn-small btn-danger" onclick="deleteFeed(${feed.timestamp})">Delete</button>
+                            </div>
+                        </div>`;
             }).join('');
         }
 
@@ -348,12 +406,29 @@
             renderDiaperLog(); renderDiaperSummary(); renderHomescreen();
             showToast("Diaper logged!");
         }
+        function deleteDiaper(timestamp) {
+            if (!confirm('Are you sure you want to delete this diaper log?')) return;
+            diapers = diapers.filter(d => d.timestamp !== timestamp);
+            saveData();
+            renderDiaperLog();
+            renderDiaperSummary();
+            renderHomescreen();
+            showToast('Diaper log deleted.');
+        }
         function renderDiaperLog() {
             const c = document.getElementById('diaperLog');
             c.innerHTML = '<h2>Recent Diapers</h2>' + diapers.slice().sort((a,b)=>b.timestamp-a.timestamp).map(d => {
                 const dateTime = new Date(d.timestamp).toLocaleString([], {month: 'short', day: 'numeric', hour:'2-digit',minute:'2-digit'});
                 let details = d.type==='pee' ? 'Pee 💧' : `Poop 💩 (Severity: ${d.severity || 'N/A'})`;
-                return `<div class="log-item"><div class="log-details">${details}</div><div class="log-time">${dateTime}</div></div>`;
+                return `<div class="log-item">
+                            <div class="log-item-info">
+                                <div class="log-details">${details}</div>
+                                <div class="log-time">${dateTime}</div>
+                            </div>
+                            <div class="log-item-actions">
+                                <button class="btn-small btn-danger" onclick="deleteDiaper(${d.timestamp})">Delete</button>
+                            </div>
+                        </div>`;
             }).join('');
         }
         function renderDiaperSummary() {
